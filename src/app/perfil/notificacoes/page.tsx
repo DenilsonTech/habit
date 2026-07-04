@@ -76,7 +76,7 @@ export default function NotificacoesPage() {
   }
 
   return (
-    <div className="mx-auto min-h-dvh w-full max-w-md px-5 pt-6 pb-10">
+    <div className="mx-auto min-h-dvh w-full max-w-md px-5 pt-safe pb-10">
       <SettingsHeader title="Notificações" />
 
       <div className="mt-6 space-y-6">

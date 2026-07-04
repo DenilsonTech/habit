@@ -4,6 +4,13 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Padding do topo que respeita a safe area do iOS (notch / Dynamic Island)
+   quando a PWA corre em fullscreen com status bar translúcido. Sem notch,
+   env() = 0, logo fica igual ao pt-6 (1.5rem) anterior. */
+@utility pt-safe {
+  padding-top: calc(env(safe-area-inset-top) + 1.5rem);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

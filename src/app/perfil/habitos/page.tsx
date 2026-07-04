@@ -23,7 +23,7 @@ export default function HabitosPage() {
   );
 
   return (
-    <div className="mx-auto min-h-dvh w-full max-w-md px-5 pt-6 pb-10">
+    <div className="mx-auto min-h-dvh w-full max-w-md px-5 pt-safe pb-10">
       <SettingsHeader title="Os meus hábitos" />
 
       <div className="mt-6">
