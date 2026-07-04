@@ -1,0 +1,19 @@
+name: Lembretes de água
+
+# Cron a cada 5 min (o GitHub pode atrasar em picos — aceitável para lembretes).
+# Repo público => minutos de Actions ilimitados/grátis.
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  check-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disparar verificação de lembretes
+        run: |
+          curl -sS -X POST "${{ vars.APP_URL }}/api/cron/check-reminders" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --fail-with-body

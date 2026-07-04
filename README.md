@@ -1,36 +1,29 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Hábitos
 
-## Getting Started
+PWA pessoal para criar e manter hábitos diários saudáveis, com foco na
+hidratação. Sem login — identidade por `device_id` anónimo.
 
-First, run the development server:
+## Stack
+
+- Next.js (App Router) · TypeScript · Tailwind · shadcn/ui
+- Prisma + Neon Postgres
+- TanStack Query (estado/otimista)
+- Web Push (VAPID) + GitHub Actions (cron) para lembretes
+- Deploy: Vercel
+
+## Desenvolvimento
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Precisa de um `.env` (ver `.env.example`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Documentação
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `docs/PRD-habitos-app.md` — produto
+- `docs/DESIGN.md` — design system
+- `docs/ADD-FLOW.md` — fluxo de adicionar hábito
+- `docs/DEPLOY.md` — deploy + notificações
+- `CLAUDE.md` / `AGENTS.md` — regras para o Claude Code

@@ -1,0 +1,162 @@
+// Schema da app de hábitos diários — reflete o modelo de dados do PRD (secção 5).
+// Regra do projeto: alterar aqui e correr `prisma db push` (nunca `migrate`).
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Periodicidade de um hábito: todos os dias vs apenas dias úteis (2ª–6ª).
+enum Schedule {
+  daily
+  weekdays
+}
+
+// Identidade anónima do dispositivo (UUID gerado no cliente, guardado em localStorage).
+model Device {
+  id        String   @id @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  profile              Profile?
+  waterConfig          WaterConfig?
+  pontuacao            Pontuacao?
+  habits               Habit[]
+  dailyLogs            DailyLog[]
+  streaks              Streak[]
+  pushSubscriptions    PushSubscription[]
+  reminderDispatchLogs ReminderDispatchLog[]
+
+  @@map("devices")
+}
+
+// Perfil resultante do onboarding (idade + horários da rotina).
+model Profile {
+  deviceId     String   @id @map("device_id") @db.Uuid
+  idade        Int
+  acordar      DateTime @db.Time(6)
+  sair         DateTime @db.Time(6)
+  chegar       DateTime @db.Time(6)
+  criadoEm     DateTime @default(now()) @map("criado_em") @db.Timestamptz(6)
+  atualizadoEm DateTime @updatedAt @map("atualizado_em") @db.Timestamptz(6)
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+// Hábitos ativos por dispositivo (5 pré-definidos + custom).
+model Habit {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deviceId           String   @map("device_id") @db.Uuid
+  slug               String
+  nome               String
+  descricao          String?
+  schedule           Schedule
+  isCounter          Boolean  @default(false) @map("is_counter")
+  metaValor          Int?     @map("meta_valor")
+  unidade            String? // ex: 'ml', 'páginas', 'minutos' (para hábitos-contador)
+  pontosPorConclusao Int        @default(10) @map("pontos_por_conclusao")
+  icon               String     @default("circle")
+  reminderTimes      DateTime[] @map("reminder_times") @db.Time(6)
+  lembrete           Boolean    @default(true)
+  ativo              Boolean    @default(true)
+  criadoEm           DateTime   @default(now()) @map("criado_em") @db.Timestamptz(6)
+
+  device               Device                @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  dailyLogs            DailyLog[]
+  streaks              Streak[]
+  reminderDispatchLogs ReminderDispatchLog[]
+
+  @@index([deviceId])
+  @@map("habits")
+}
+
+// Configuração específica de água (meta, copo e horários de lembrete).
+model WaterConfig {
+  deviceId      String     @id @map("device_id") @db.Uuid
+  goalMl        Int        @default(2000) @map("goal_ml")
+  cupMl         Int        @default(250) @map("cup_ml")
+  reminderTimes DateTime[] @map("reminder_times") @db.Time(6)
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@map("water_config")
+}
+
+// Registo diário por hábito.
+model DailyLog {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deviceId     String   @map("device_id") @db.Uuid
+  habitId      String   @map("habit_id") @db.Uuid
+  logDate      DateTime @map("log_date") @db.Date
+  concluido    Boolean  @default(false)
+  valor        Int? // usado por hábitos-contador (ex: ml de água)
+  atualizadoEm DateTime @updatedAt @map("atualizado_em") @db.Timestamptz(6)
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  habit  Habit  @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([deviceId, habitId, logDate])
+  @@index([deviceId, logDate])
+  @@map("daily_logs")
+}
+
+// Streaks por hábito (cache calculado server-side).
+model Streak {
+  deviceId   String    @map("device_id") @db.Uuid
+  habitId    String    @map("habit_id") @db.Uuid
+  atual      Int       @default(0)
+  maior      Int       @default(0)
+  ultimaData DateTime? @map("ultima_data") @db.Date
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  habit  Habit  @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@id([deviceId, habitId])
+  @@map("streaks")
+}
+
+// Pontuação total acumulada (cache).
+model Pontuacao {
+  deviceId     String @id @map("device_id") @db.Uuid
+  pontosTotais Int    @default(0) @map("pontos_totais")
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@map("pontuacao")
+}
+
+// Subscriptions de push (Web Push API).
+model PushSubscription {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deviceId  String   @map("device_id") @db.Uuid
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  criadoEm  DateTime @default(now()) @map("criado_em") @db.Timestamptz(6)
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId])
+  @@map("push_subscriptions")
+}
+
+// Evita reenviar o mesmo lembrete na mesma janela (dedup por data + horário).
+model ReminderDispatchLog {
+  deviceId     String   @map("device_id") @db.Uuid
+  habitId      String   @map("habit_id") @db.Uuid
+  dispatchDate DateTime @map("dispatch_date") @db.Date
+  reminderTime DateTime @map("reminder_time") @db.Time(6)
+  enviadoEm    DateTime @default(now()) @map("enviado_em") @db.Timestamptz(6)
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  habit  Habit  @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@id([deviceId, habitId, dispatchDate, reminderTime])
+  @@map("reminder_dispatch_log")
+}
