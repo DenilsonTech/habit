@@ -98,7 +98,8 @@ export function useLogHabit(deviceId: string) {
     onError: (_e, _v, ctx) => {
       if (ctx?.prev) qc.setQueryData(stateKey(deviceId), ctx.prev);
     },
-    // Aplica os pontos/streak autoritativos da resposta (realtime, sem refetch).
+    // Aplica os pontos/streak autoritativos da resposta (realtime, sem refetch)
+    // e marca o progresso para refazer (a agregação do histórico muda).
     onSuccess: (data, vars) => {
       qc.setQueryData<AppState>(stateKey(deviceId), (cur) =>
         cur
@@ -109,6 +110,7 @@ export function useLogHabit(deviceId: string) {
             }
           : cur,
       );
+      qc.invalidateQueries({ queryKey: ["progress", deviceId] });
     },
   });
 }
