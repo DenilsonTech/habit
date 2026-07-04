@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { cupsFromGoal, generateReminderTimes } from "@/lib/seed";
 
 export interface StateHabit {
   id: string;
@@ -18,11 +19,13 @@ export interface StateHabit {
 export interface AppState {
   onboarded: boolean;
   today: string;
+  profile: { idade: number; acordar: string; sair: string; chegar: string };
   habits: StateHabit[];
   water: {
     goalMl: number;
     cupMl: number;
     reminderTimes: string[];
+    lembretesAtivos: boolean;
     currentMl: number;
   } | null;
   logs: Record<string, { concluido: boolean; valor: number | null }>;
@@ -205,6 +208,77 @@ export function useRemoveHabit(deviceId: string) {
     onSettled: () => {
       qc.invalidateQueries({ queryKey: stateKey(deviceId) });
       qc.invalidateQueries({ queryKey: ["progress", deviceId] });
+    },
+  });
+}
+
+export interface SaveWaterConfigInput {
+  goalMl?: number;
+  reminderTimes?: string[];
+  lembretesAtivos?: boolean;
+}
+
+// Guarda a config de água (meta/horários/toggle) de forma otimista. Ao mudar a
+// meta, os horários regeneram-se (um por copo); a resposta traz-nos os finais.
+export function useSaveWaterConfig(deviceId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: SaveWaterConfigInput) => {
+      const res = await fetch("/api/water-config", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ deviceId, ...vars }),
+      });
+      if (!res.ok) throw new Error("Não foi possível guardar.");
+      return res.json() as Promise<{
+        goalMl: number;
+        cupMl: number;
+        reminderTimes: string[];
+        lembretesAtivos: boolean;
+      }>;
+    },
+    onMutate: async (vars) => {
+      await qc.cancelQueries({ queryKey: stateKey(deviceId) });
+      const prev = qc.getQueryData<AppState>(stateKey(deviceId));
+      if (prev?.water) {
+        const next = structuredClone(prev);
+        if (next.water) {
+          if (vars.lembretesAtivos !== undefined) {
+            next.water.lembretesAtivos = vars.lembretesAtivos;
+          }
+          if (vars.reminderTimes) next.water.reminderTimes = vars.reminderTimes;
+          if (vars.goalMl !== undefined) {
+            next.water.goalMl = vars.goalMl;
+            // Regenera já os horários (um por copo) para feedback imediato.
+            next.water.reminderTimes = generateReminderTimes(
+              next.profile.acordar,
+              next.profile.chegar,
+              cupsFromGoal(vars.goalMl, next.water.cupMl),
+            );
+          }
+        }
+        qc.setQueryData(stateKey(deviceId), next);
+      }
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(stateKey(deviceId), ctx.prev);
+    },
+    onSuccess: (data) => {
+      qc.setQueryData<AppState>(stateKey(deviceId), (cur) =>
+        cur?.water
+          ? {
+              ...cur,
+              water: {
+                ...cur.water,
+                goalMl: data.goalMl,
+                cupMl: data.cupMl,
+                reminderTimes: data.reminderTimes,
+                lembretesAtivos: data.lembretesAtivos,
+              },
+            }
+          : cur,
+      );
     },
   });
 }

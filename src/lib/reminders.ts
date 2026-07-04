@@ -20,6 +20,7 @@ export async function dispatchDueReminders(): Promise<{ sent: number }> {
 
   for (const cfg of configs) {
     const { deviceId } = cfg;
+    if (!cfg.lembretesAtivos) continue;
 
     const dueTimes = cfg.reminderTimes.filter((t) => {
       const m = hhmmToMinutes(dateToTime(t));

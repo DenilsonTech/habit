@@ -5,6 +5,7 @@ import {
   DEFAULT_GOAL_ML,
   DEFAULT_PROFILE,
   PREDEFINED_HABITS,
+  cupsFromGoal,
   generateReminderTimes,
 } from "@/lib/seed";
 import { timeToDate } from "@/lib/db-time";
@@ -56,7 +57,11 @@ export async function POST(request: Request) {
     },
   });
 
-  const reminderTimes = generateReminderTimes(acordar, chegar).map(timeToDate);
+  const reminderTimes = generateReminderTimes(
+    acordar,
+    chegar,
+    cupsFromGoal(goalMl, cupMl),
+  ).map(timeToDate);
   await prisma.waterConfig.upsert({
     where: { deviceId },
     create: { deviceId, goalMl, cupMl, reminderTimes },

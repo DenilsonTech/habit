@@ -5,12 +5,16 @@ import { Cancel01Icon, Clock01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 
 // Editor de horários de lembrete reutilizável (drawer do Add + Notificações).
+// `lockCount`: quando true, a contagem é fixa (ex.: água = 1 hora por copo) —
+// esconde o "Adicionar" e o remover; só se editam as horas.
 export function ReminderTimesEditor({
   times,
   onChange,
+  lockCount = false,
 }: {
   times: string[];
   onChange: (times: string[]) => void;
+  lockCount?: boolean;
 }) {
   return (
     <div className="space-y-3">
@@ -33,7 +37,7 @@ export function ReminderTimesEditor({
             }
             className="scheme-dark flex-1 bg-transparent text-sm text-foreground outline-none"
           />
-          {times.length > 1 && (
+          {!lockCount && times.length > 1 && (
             <button
               type="button"
               onClick={() => onChange(times.filter((_, idx) => idx !== i))}
@@ -45,14 +49,16 @@ export function ReminderTimesEditor({
           )}
         </div>
       ))}
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={() => onChange([...times, "13:00"])}
-        className="h-11 w-full rounded-xl"
-      >
-        Adicionar
-      </Button>
+      {!lockCount && (
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => onChange([...times, "13:00"])}
+          className="h-11 w-full rounded-xl"
+        >
+          Adicionar
+        </Button>
+      )}
     </div>
   );
 }

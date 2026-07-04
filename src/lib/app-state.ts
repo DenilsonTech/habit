@@ -51,6 +51,7 @@ export async function getAppState(deviceId: string) {
           goalMl: waterConfig.goalMl,
           cupMl: waterConfig.cupMl,
           reminderTimes: waterConfig.reminderTimes.map(dateToTime),
+          lembretesAtivos: waterConfig.lembretesAtivos,
           currentMl: aguaLog?.valor ?? 0,
         }
       : null,

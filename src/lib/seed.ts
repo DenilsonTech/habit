@@ -25,17 +25,25 @@ export const DEFAULT_PROFILE = { acordar: "05:00", sair: "06:00", chegar: "20:30
 export const DEFAULT_GOAL_ML = 2000;
 export const DEFAULT_CUP_ML = 250;
 
-// Distribui ~count lembretes de água uniformemente entre acordar e chegar.
+// Distribui `count` lembretes (um por copo) uniformemente entre acordar e
+// chegar. count = meta ÷ tamanho do copo. Com 1 copo, um único lembrete ao
+// acordar.
+export function cupsFromGoal(goalMl: number, cupMl: number): number {
+  return Math.max(1, Math.round(goalMl / cupMl));
+}
+
 export function generateReminderTimes(
   acordar: string,
   chegar: string,
-  count = 7,
+  count = 8,
 ): string[] {
+  const n = Math.max(1, count);
   const start = hhmmToMinutes(acordar);
+  if (n === 1) return [minutesToHhmm(start)];
   let end = hhmmToMinutes(chegar);
   if (end <= start) end = start + 60;
-  const step = (end - start) / (count - 1);
-  return Array.from({ length: count }, (_, i) =>
+  const step = (end - start) / (n - 1);
+  return Array.from({ length: n }, (_, i) =>
     minutesToHhmm(Math.round(start + step * i)),
   );
 }

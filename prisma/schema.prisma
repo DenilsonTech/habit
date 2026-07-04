@@ -82,6 +82,7 @@ model WaterConfig {
   goalMl        Int        @default(2000) @map("goal_ml")
   cupMl         Int        @default(250) @map("cup_ml")
   reminderTimes DateTime[] @map("reminder_times") @db.Time(6)
+  lembretesAtivos Boolean  @default(true) @map("lembretes_ativos")
 
   device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
 
