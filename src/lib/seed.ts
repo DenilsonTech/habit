@@ -14,13 +14,10 @@ export interface SeedHabit {
   reminderTimes: string[];
 }
 
-// Água usa os horários do water_config; os restantes têm uma hora representativa.
+// Único hábito default: água (usa os horários do water_config). Todos os
+// restantes são criados pelo utilizador — arranca com timeline vazia.
 export const PREDEFINED_HABITS: SeedHabit[] = [
   { slug: "agua", nome: "Água", schedule: "daily", isCounter: true, unidade: "ml", pontosPorConclusao: 20, icon: "droplet", reminderTimes: [] },
-  { slug: "sono", nome: "Dormir cedo", schedule: "daily", isCounter: false, unidade: null, pontosPorConclusao: 15, icon: "moon", reminderTimes: ["22:30"] },
-  { slug: "movimento", nome: "Movimento", schedule: "weekdays", isCounter: false, unidade: null, pontosPorConclusao: 10, icon: "run", reminderTimes: ["07:00"] },
-  { slug: "pequeno-almoco", nome: "Primeira refeição", schedule: "weekdays", isCounter: false, unidade: null, pontosPorConclusao: 10, icon: "coffee", reminderTimes: ["06:30"] },
-  { slug: "pausa-olhos", nome: "Pausa para os olhos", schedule: "weekdays", isCounter: false, unidade: null, pontosPorConclusao: 10, icon: "eye", reminderTimes: ["15:00"] },
 ];
 
 // Rotina default (perfil do PRD) — editável no Perfil.

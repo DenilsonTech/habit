@@ -37,7 +37,9 @@ const variants = {
   }),
 };
 
-export function AddHabitDrawer() {
+// `trigger` opcional: quando fornecido, substitui o botão ＋ default (ex.: o
+// empty state da home usa um botão "Criar hábito" para abrir o mesmo fluxo).
+export function AddHabitDrawer({ trigger }: { trigger?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
@@ -120,13 +122,15 @@ export function AddHabitDrawer() {
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerTrigger asChild>
-        <button
-          type="button"
-          aria-label="Adicionar"
-          className="pointer-events-auto flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95"
-        >
-          <HugeiconsIcon icon={PlusSignIcon} size={26} strokeWidth={2} />
-        </button>
+        {trigger ?? (
+          <button
+            type="button"
+            aria-label="Adicionar"
+            className="pointer-events-auto flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95"
+          >
+            <HugeiconsIcon icon={PlusSignIcon} size={26} strokeWidth={2} />
+          </button>
+        )}
       </DrawerTrigger>
 
       <DrawerContent className="h-[92dvh] max-h-[92dvh]! bg-background">

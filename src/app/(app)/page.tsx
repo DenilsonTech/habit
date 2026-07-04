@@ -8,6 +8,7 @@ import { useAppState, useLogHabit } from "@/lib/queries";
 import { HomeHeader } from "@/components/home/home-header";
 import { DailyProgressCard } from "@/components/home/daily-progress-card";
 import { HabitTimeline } from "@/components/home/habit-timeline";
+import { EmptyHabits } from "@/components/home/empty-habits";
 import { CelebrationDrawer } from "@/components/home/celebration-drawer";
 
 function HomeSkeleton() {
@@ -73,6 +74,9 @@ export default function HomePage() {
   const total = state.habits.length;
   const doneCount = state.habits.filter((h) => state.logs[h.id]?.concluido).length;
   const todayPct = total ? Math.round((doneCount / total) * 100) : 0;
+  // Contagem da secção "Hábitos de hoje" = só a timeline (exclui a água, que
+  // aparece nos copos, não na lista).
+  const timelineDone = timeline.filter((h) => state.logs[h.id]?.concluido).length;
   const streakVals = Object.values(state.streaks).map((s) => s.atual);
   const streak = streakVals.length ? Math.max(...streakVals) : 0;
 
@@ -94,28 +98,34 @@ export default function HomePage() {
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-[0.95rem] font-semibold">Hábitos de hoje</h2>
-          <span className="text-xs text-muted-foreground">
-            {doneCount} de {total}
-          </span>
+          {timeline.length > 0 && (
+            <span className="text-xs text-muted-foreground">
+              {timelineDone} de {timeline.length}
+            </span>
+          )}
         </div>
-        <HabitTimeline
-          items={timeline.map((h) => ({
-            slug: h.slug,
-            nome: h.nome,
-            icon: habitIcon(h.icon),
-            hora: h.horas[0] ?? "",
-            done: state.logs[h.id]?.concluido ?? false,
-          }))}
-          onToggle={(slug) => {
-            const h = timeline.find((x) => x.slug === slug);
-            if (h) {
-              logHabit.mutate({
-                habitId: h.id,
-                concluido: !(state.logs[h.id]?.concluido ?? false),
-              });
-            }
-          }}
-        />
+        {timeline.length > 0 ? (
+          <HabitTimeline
+            items={timeline.map((h) => ({
+              slug: h.slug,
+              nome: h.nome,
+              icon: habitIcon(h.icon),
+              hora: h.horas[0] ?? "",
+              done: state.logs[h.id]?.concluido ?? false,
+            }))}
+            onToggle={(slug) => {
+              const h = timeline.find((x) => x.slug === slug);
+              if (h) {
+                logHabit.mutate({
+                  habitId: h.id,
+                  concluido: !(state.logs[h.id]?.concluido ?? false),
+                });
+              }
+            }}
+          />
+        ) : (
+          <EmptyHabits />
+        )}
       </section>
 
       <CelebrationDrawer
