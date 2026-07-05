@@ -14,8 +14,9 @@ de estado novas, sem over-engineering.
 > - As 6 decisões em aberto ficam nas **recomendações** (verde on-brand nos badges,
 >   "dia ativo" = ≥1 conclusão, multietapas com nome, timer de foco, bónus pequeno,
 >   marcos por mensagem).
-> - **Fases 1 e 2 — feitas** (água incremental + micro-feedback; 🔥 por hábito +
->   streak global de dias ativos). Restantes (badges, multietapas, timer) por fazer.
+> - **Fases 1, 2 e 3 — feitas** (água incremental + micro-feedback; 🔥 por hábito
+>   + streak global; badges/conquistas com página em Perfil e drawer de desbloqueio).
+>   Restantes: **Fase 4 (multietapas)** e **Fase 5 (timer)**.
 
 ---
 

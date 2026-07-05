@@ -10,7 +10,7 @@ export async function getAppState(deviceId: string) {
   if (!profile) return { onboarded: false as const };
 
   const today = maputoDateString();
-  const [habits, waterConfig, pontuacao, logs, streaks, diasConcluidos] =
+  const [habits, waterConfig, pontuacao, logs, streaks, diasConcluidos, conquistas] =
     await Promise.all([
       prisma.habit.findMany({
         where: { deviceId, ativo: true },
@@ -26,6 +26,7 @@ export async function getAppState(deviceId: string) {
         select: { logDate: true },
         distinct: ["logDate"],
       }),
+      prisma.conquista.findMany({ where: { deviceId }, select: { chave: true } }),
     ]);
 
   const diasAtivos = new Set(
@@ -86,5 +87,6 @@ export async function getAppState(deviceId: string) {
     ),
     pontos: pontuacao?.pontosTotais ?? 0,
     diaStreak,
+    conquistas: conquistas.map((c) => c.chave),
   };
 }

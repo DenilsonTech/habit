@@ -12,6 +12,7 @@ import {
   DropletIcon,
   GlassWaterIcon,
   Home01Icon,
+  Medal01Icon,
   Notification03Icon,
   UserCircleIcon,
   UserIcon,
@@ -68,6 +69,11 @@ export default function PerfilPage() {
         </SettingsGroup>
 
         <SettingsGroup title="Geral">
+          <SettingRow
+            icon={Medal01Icon}
+            label="Conquistas"
+            onClick={() => router.push("/perfil/conquistas")}
+          />
           <SettingRow
             icon={CheckmarkCircle02Icon}
             label="Os meus hábitos"

@@ -11,6 +11,7 @@ import { HabitTimeline } from "@/components/home/habit-timeline";
 import { EmptyHabits } from "@/components/home/empty-habits";
 import { HabitFeedback, type Feedback } from "@/components/home/habit-feedback";
 import { CelebrationDrawer } from "@/components/home/celebration-drawer";
+import { BadgeUnlockDrawer } from "@/components/badge-unlock-drawer";
 
 // Mensagem de reforço conforme o progresso do dia (sem emojis, on-brand).
 function encouragement(done: number, total: number): string {
@@ -78,6 +79,9 @@ export default function HomePage() {
     return () => clearTimeout(t);
   }, [feedback]);
 
+  // Conquistas acabadas de desbloquear -> drawer de celebração.
+  const [novasConquistas, setNovasConquistas] = useState<string[]>([]);
+
   if (!deviceId || isLoading || !state || !state.onboarded) {
     return <HomeSkeleton />;
   }
@@ -125,6 +129,8 @@ export default function HomePage() {
             { habitId: agua.id, valor: n * cupMl },
             {
               onSuccess: (data) => {
+                if (data.novasConquistas?.length)
+                  setNovasConquistas(data.novasConquistas);
                 // Só festeja a meta de água atingida (o incremento por copo já
                 // se vê na barra); se completar o dia, deixa a celebração.
                 if (data.concluido && !wasDone && doneCount + 1 < total) {
@@ -168,6 +174,8 @@ export default function HomePage() {
                 { habitId: h.id, concluido: !wasDone },
                 {
                   onSuccess: (data) => {
+                    if (data.novasConquistas?.length)
+                      setNovasConquistas(data.novasConquistas);
                     // Reforço só ao concluir (não ao desmarcar); se completar o
                     // dia inteiro, deixa a celebração brilhar sozinha.
                     if (data.concluido && !wasDone && doneCount + 1 < total) {
@@ -193,6 +201,11 @@ export default function HomePage() {
         onOpenChange={setShowCelebration}
         pontos={state.pontos}
         streak={streak}
+      />
+
+      <BadgeUnlockDrawer
+        chaves={novasConquistas}
+        onClose={() => setNovasConquistas([])}
       />
     </div>
   );

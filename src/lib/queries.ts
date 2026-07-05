@@ -32,6 +32,7 @@ export interface AppState {
   streaks: Record<string, { atual: number; maior: number }>;
   pontos: number;
   diaStreak: number; // dias seguidos com ≥1 conclusão (streak global)
+  conquistas: string[]; // chaves das conquistas desbloqueadas
 }
 
 export interface CreateHabitInput {
@@ -52,6 +53,10 @@ const firstHora = (h: StateHabit) =>
   h.horas.length ? [...h.horas].sort()[0] : "99:99";
 const sortHabitsByHora = (habits: StateHabit[]) =>
   [...habits].sort((a, b) => firstHora(a).localeCompare(firstHora(b)));
+
+// Junta as conquistas atuais com as novas devolvidas por uma mutação (sem dups).
+const mergeConquistas = (atuais: string[], novas?: string[]) =>
+  novas && novas.length ? [...new Set([...atuais, ...novas])] : atuais;
 
 async function fetchState(deviceId: string): Promise<AppState> {
   const res = await fetch(`/api/state?deviceId=${deviceId}`);
@@ -119,6 +124,7 @@ export function useLogHabit(deviceId: string) {
               pontos: data.pontos,
               diaStreak: data.diaStreak ?? cur.diaStreak,
               streaks: { ...cur.streaks, [vars.habitId]: data.streak },
+              conquistas: mergeConquistas(cur.conquistas, data.novasConquistas),
             }
           : cur,
       );
@@ -176,6 +182,7 @@ export function useCreateHabit(deviceId: string) {
                 ...cur,
                 habits: sortHabitsByHora([...cur.habits, habit]),
                 streaks: { ...cur.streaks, [habit.id]: { atual: 0, maior: 0 } },
+                conquistas: mergeConquistas(cur.conquistas, data?.novasConquistas),
               }
             : cur,
         );

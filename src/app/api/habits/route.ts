@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { dateToTime, timeToDate } from "@/lib/db-time";
+import { evaluateBadges } from "@/lib/badge-eval";
 
 // Cria um hábito custom a partir do drawer do Add.
 // Mapeamento para o schema atual (mosaico/multi-etapas/temporizador ficam para
@@ -59,8 +60,11 @@ export async function POST(request: Request) {
   });
   await prisma.streak.create({ data: { deviceId, habitId: habit.id } });
 
+  const novasConquistas = await evaluateBadges(deviceId);
+
   return NextResponse.json({
     ok: true,
+    novasConquistas,
     habit: {
       id: habit.id,
       slug: habit.slug,

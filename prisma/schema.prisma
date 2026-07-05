@@ -30,6 +30,7 @@ model Device {
   streaks              Streak[]
   pushSubscriptions    PushSubscription[]
   reminderDispatchLogs ReminderDispatchLog[]
+  conquistas           Conquista[]
 
   @@map("devices")
 }
@@ -130,6 +131,20 @@ model Pontuacao {
   device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
 
   @@map("pontuacao")
+}
+
+// Conquistas (badges) desbloqueadas. As definições vivem em src/lib/badges.ts;
+// aqui só guardamos a chave desbloqueada por device.
+model Conquista {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deviceId       String   @map("device_id") @db.Uuid
+  chave          String
+  desbloqueadoEm DateTime @default(now()) @map("desbloqueado_em") @db.Timestamptz(6)
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@unique([deviceId, chave])
+  @@map("conquistas")
 }
 
 // Subscriptions de push (Web Push API).

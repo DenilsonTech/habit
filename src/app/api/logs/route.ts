@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { dateOnly } from "@/lib/db-time";
 import { maputoDateString } from "@/lib/time";
 import { computeStreak } from "@/lib/streak";
+import { evaluateBadges } from "@/lib/badge-eval";
 
 // Regista/atualiza a conclusão de um hábito num dia e recalcula streak + pontos.
 export async function POST(request: Request) {
@@ -87,6 +88,9 @@ export async function POST(request: Request) {
   );
   const diaStreak = computeStreak("daily", diasAtivos, maputoDateString());
 
+  // Conquistas desbloqueadas por esta ação (para celebração no cliente).
+  const novasConquistas = await evaluateBadges(deviceId);
+
   return NextResponse.json({
     ok: true,
     concluido,
@@ -94,5 +98,6 @@ export async function POST(request: Request) {
     streak: { atual, maior },
     pontos,
     diaStreak,
+    novasConquistas,
   });
 }
