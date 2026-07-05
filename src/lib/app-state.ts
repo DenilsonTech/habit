@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { dateOnly, dateToTime } from "@/lib/db-time";
-import { maputoDateString } from "@/lib/time";
+import { hhmmToMinutes, maputoDateString } from "@/lib/time";
 
 // Constrói o estado completo do device para hoje (Maputo). Partilhado por
 // /api/state e /api/onboarding (para priming do cache sem refetch).
@@ -25,6 +25,16 @@ export async function getAppState(deviceId: string) {
     ? logs.find((l) => l.habitId === aguaHabit.id)
     : undefined;
 
+  // Ordena por hora do lembrete (o mais cedo primeiro); sem hora vai para o fim.
+  // Empate resolvido pela ordem de criação (o findMany já vem por criadoEm asc).
+  const firstMinute = (times: Date[]) =>
+    times.length
+      ? Math.min(...times.map((t) => hhmmToMinutes(dateToTime(t))))
+      : Number.POSITIVE_INFINITY;
+  const sortedHabits = [...habits].sort(
+    (a, b) => firstMinute(a.reminderTimes) - firstMinute(b.reminderTimes),
+  );
+
   return {
     onboarded: true as const,
     today,
@@ -34,7 +44,7 @@ export async function getAppState(deviceId: string) {
       sair: dateToTime(profile.sair),
       chegar: dateToTime(profile.chegar),
     },
-    habits: habits.map((h) => ({
+    habits: sortedHabits.map((h) => ({
       id: h.id,
       slug: h.slug,
       nome: h.nome,

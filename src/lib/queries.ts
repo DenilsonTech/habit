@@ -45,6 +45,13 @@ export interface CreateHabitInput {
 
 const stateKey = (deviceId: string | null) => ["state", deviceId] as const;
 
+// Ordena por hora do lembrete (mais cedo primeiro); sem hora vai para o fim.
+// Espelha a ordenação do servidor (app-state.ts) para o insert otimista.
+const firstHora = (h: StateHabit) =>
+  h.horas.length ? [...h.horas].sort()[0] : "99:99";
+const sortHabitsByHora = (habits: StateHabit[]) =>
+  [...habits].sort((a, b) => firstHora(a).localeCompare(firstHora(b)));
+
 async function fetchState(deviceId: string): Promise<AppState> {
   const res = await fetch(`/api/state?deviceId=${deviceId}`);
   if (!res.ok) throw new Error("Falha ao carregar o estado.");
@@ -165,7 +172,7 @@ export function useCreateHabit(deviceId: string) {
           cur
             ? {
                 ...cur,
-                habits: [...cur.habits, habit],
+                habits: sortHabitsByHora([...cur.habits, habit]),
                 streaks: { ...cur.streaks, [habit.id]: { atual: 0, maior: 0 } },
               }
             : cur,
