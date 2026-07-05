@@ -1,3 +1,6 @@
+"use client";
+
+import { AnimatePresence, motion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Tick02Icon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
@@ -37,9 +40,10 @@ export function HabitTimeline({
               />
             )}
 
-            <button
+            <motion.button
               type="button"
               onClick={() => onToggle(item.slug)}
+              whileTap={{ scale: 0.85 }}
               aria-pressed={item.done}
               aria-label={
                 item.done
@@ -53,10 +57,20 @@ export function HabitTimeline({
                   : "border-border text-transparent hover:border-muted-foreground",
               )}
             >
-              {item.done && (
-                <HugeiconsIcon icon={Tick02Icon} size={12} strokeWidth={3} />
-              )}
-            </button>
+              <AnimatePresence>
+                {item.done && (
+                  <motion.span
+                    key="tick"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 18 }}
+                  >
+                    <HugeiconsIcon icon={Tick02Icon} size={12} strokeWidth={3} />
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
 
             <div className="flex flex-1 items-center justify-between gap-3">
               <p

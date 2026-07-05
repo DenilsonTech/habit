@@ -9,7 +9,17 @@ import { HomeHeader } from "@/components/home/home-header";
 import { DailyProgressCard } from "@/components/home/daily-progress-card";
 import { HabitTimeline } from "@/components/home/habit-timeline";
 import { EmptyHabits } from "@/components/home/empty-habits";
+import { HabitFeedback, type Feedback } from "@/components/home/habit-feedback";
 import { CelebrationDrawer } from "@/components/home/celebration-drawer";
+
+// Mensagem de reforço conforme o progresso do dia (sem emojis, on-brand).
+function encouragement(done: number, total: number): string {
+  if (done <= 1) return "Começaste bem.";
+  const ratio = done / total;
+  if (ratio >= 0.66) return "Falta pouco!";
+  if (ratio >= 0.4) return "Já vais a meio.";
+  return "Boa, mais um.";
+}
 
 function HomeSkeleton() {
   return (
@@ -60,6 +70,14 @@ export default function HomePage() {
     wasAllDone.current = allDone;
   }, [state]);
 
+  // Chip de reforço a cada conclusão (auto-desaparece).
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  useEffect(() => {
+    if (!feedback) return;
+    const t = setTimeout(() => setFeedback(null), 1800);
+    return () => clearTimeout(t);
+  }, [feedback]);
+
   if (!deviceId || isLoading || !state || !state.onboarded) {
     return <HomeSkeleton />;
   }
@@ -73,7 +91,16 @@ export default function HomePage() {
 
   const total = state.habits.length;
   const doneCount = state.habits.filter((h) => state.logs[h.id]?.concluido).length;
-  const todayPct = total ? Math.round((doneCount / total) * 100) : 0;
+  // Progresso do dia = média das frações de conclusão. Contadores (água) contam
+  // proporção valor/meta, por isso cada copo já empurra a % (não salta só no fim).
+  const progressSum = state.habits.reduce((sum, h) => {
+    const log = state.logs[h.id];
+    if (h.isCounter && h.metaValor) {
+      return sum + Math.min((log?.valor ?? 0) / h.metaValor, 1);
+    }
+    return sum + (log?.concluido ? 1 : 0);
+  }, 0);
+  const todayPct = total ? Math.round((progressSum / total) * 100) : 0;
   // Contagem da secção "Hábitos de hoje" = só a timeline (exclui a água, que
   // aparece nos copos, não na lista).
   const timelineDone = timeline.filter((h) => state.logs[h.id]?.concluido).length;
@@ -82,6 +109,7 @@ export default function HomePage() {
 
   return (
     <div className="space-y-5">
+      <HabitFeedback feedback={feedback} />
       <HomeHeader />
 
       <DailyProgressCard
@@ -91,7 +119,25 @@ export default function HomePage() {
         cups={cups}
         cupsGoal={cupsGoal}
         onSetCups={(n) => {
-          if (agua) logHabit.mutate({ habitId: agua.id, valor: n * cupMl });
+          if (!agua) return;
+          const wasDone = state.logs[agua.id]?.concluido ?? false;
+          logHabit.mutate(
+            { habitId: agua.id, valor: n * cupMl },
+            {
+              onSuccess: (data) => {
+                // Só festeja a meta de água atingida (o incremento por copo já
+                // se vê na barra); se completar o dia, deixa a celebração.
+                if (data.concluido && !wasDone && doneCount + 1 < total) {
+                  setFeedback({
+                    key: Date.now(),
+                    pontos: agua.pontos,
+                    streak: data.streak.atual,
+                    message: "Meta de água atingida!",
+                  });
+                }
+              },
+            },
+          );
         }}
       />
 
@@ -115,12 +161,25 @@ export default function HomePage() {
             }))}
             onToggle={(slug) => {
               const h = timeline.find((x) => x.slug === slug);
-              if (h) {
-                logHabit.mutate({
-                  habitId: h.id,
-                  concluido: !(state.logs[h.id]?.concluido ?? false),
-                });
-              }
+              if (!h) return;
+              const wasDone = state.logs[h.id]?.concluido ?? false;
+              logHabit.mutate(
+                { habitId: h.id, concluido: !wasDone },
+                {
+                  onSuccess: (data) => {
+                    // Reforço só ao concluir (não ao desmarcar); se completar o
+                    // dia inteiro, deixa a celebração brilhar sozinha.
+                    if (data.concluido && !wasDone && doneCount + 1 < total) {
+                      setFeedback({
+                        key: Date.now(),
+                        pontos: h.pontos,
+                        streak: data.streak.atual,
+                        message: encouragement(doneCount + 1, total),
+                      });
+                    }
+                  },
+                },
+              );
             }}
           />
         ) : (
