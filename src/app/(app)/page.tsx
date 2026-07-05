@@ -104,8 +104,8 @@ export default function HomePage() {
   // Contagem da secção "Hábitos de hoje" = só a timeline (exclui a água, que
   // aparece nos copos, não na lista).
   const timelineDone = timeline.filter((h) => state.logs[h.id]?.concluido).length;
-  const streakVals = Object.values(state.streaks).map((s) => s.atual);
-  const streak = streakVals.length ? Math.max(...streakVals) : 0;
+  // Streak do topo = dias seguidos ativos (global), não o máximo por hábito.
+  const streak = state.diaStreak;
 
   return (
     <div className="space-y-5">
@@ -158,6 +158,7 @@ export default function HomePage() {
               icon: habitIcon(h.icon),
               hora: h.horas[0] ?? "",
               done: state.logs[h.id]?.concluido ?? false,
+              streak: state.streaks[h.id]?.atual ?? 0,
             }))}
             onToggle={(slug) => {
               const h = timeline.find((x) => x.slug === slug);

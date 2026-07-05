@@ -76,11 +76,23 @@ export async function POST(request: Request) {
     update: { pontosTotais: pontos },
   });
 
+  // Streak global de dias ativos (dias distintos com ≥1 conclusão).
+  const diasConcluidos = await prisma.dailyLog.findMany({
+    where: { deviceId, concluido: true },
+    select: { logDate: true },
+    distinct: ["logDate"],
+  });
+  const diasAtivos = new Set(
+    diasConcluidos.map((l) => l.logDate.toISOString().slice(0, 10)),
+  );
+  const diaStreak = computeStreak("daily", diasAtivos, maputoDateString());
+
   return NextResponse.json({
     ok: true,
     concluido,
     valor,
     streak: { atual, maior },
     pontos,
+    diaStreak,
   });
 }

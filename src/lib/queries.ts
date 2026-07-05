@@ -31,6 +31,7 @@ export interface AppState {
   logs: Record<string, { concluido: boolean; valor: number | null }>;
   streaks: Record<string, { atual: number; maior: number }>;
   pontos: number;
+  diaStreak: number; // dias seguidos com ≥1 conclusão (streak global)
 }
 
 export interface CreateHabitInput {
@@ -116,6 +117,7 @@ export function useLogHabit(deviceId: string) {
           ? {
               ...cur,
               pontos: data.pontos,
+              diaStreak: data.diaStreak ?? cur.diaStreak,
               streaks: { ...cur.streaks, [vars.habitId]: data.streak },
             }
           : cur,

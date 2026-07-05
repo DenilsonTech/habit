@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { dateOnly, dateToTime } from "@/lib/db-time";
 import { hhmmToMinutes, maputoDateString } from "@/lib/time";
+import { computeStreak } from "@/lib/streak";
 
 // Constrói o estado completo do device para hoje (Maputo). Partilhado por
 // /api/state e /api/onboarding (para priming do cache sem refetch).
@@ -9,16 +10,28 @@ export async function getAppState(deviceId: string) {
   if (!profile) return { onboarded: false as const };
 
   const today = maputoDateString();
-  const [habits, waterConfig, pontuacao, logs, streaks] = await Promise.all([
-    prisma.habit.findMany({
-      where: { deviceId, ativo: true },
-      orderBy: { criadoEm: "asc" },
-    }),
-    prisma.waterConfig.findUnique({ where: { deviceId } }),
-    prisma.pontuacao.findUnique({ where: { deviceId } }),
-    prisma.dailyLog.findMany({ where: { deviceId, logDate: dateOnly(today) } }),
-    prisma.streak.findMany({ where: { deviceId } }),
-  ]);
+  const [habits, waterConfig, pontuacao, logs, streaks, diasConcluidos] =
+    await Promise.all([
+      prisma.habit.findMany({
+        where: { deviceId, ativo: true },
+        orderBy: { criadoEm: "asc" },
+      }),
+      prisma.waterConfig.findUnique({ where: { deviceId } }),
+      prisma.pontuacao.findUnique({ where: { deviceId } }),
+      prisma.dailyLog.findMany({ where: { deviceId, logDate: dateOnly(today) } }),
+      prisma.streak.findMany({ where: { deviceId } }),
+      // Dias distintos com ≥1 conclusão -> streak global de dias ativos.
+      prisma.dailyLog.findMany({
+        where: { deviceId, concluido: true },
+        select: { logDate: true },
+        distinct: ["logDate"],
+      }),
+    ]);
+
+  const diasAtivos = new Set(
+    diasConcluidos.map((l) => l.logDate.toISOString().slice(0, 10)),
+  );
+  const diaStreak = computeStreak("daily", diasAtivos, today);
 
   const aguaHabit = habits.find((h) => h.slug === "agua");
   const aguaLog = aguaHabit
@@ -72,5 +85,6 @@ export async function getAppState(deviceId: string) {
       streaks.map((s) => [s.habitId, { atual: s.atual, maior: s.maior }]),
     ),
     pontos: pontuacao?.pontosTotais ?? 0,
+    diaStreak,
   };
 }

@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Tick02Icon } from "@hugeicons/core-free-icons";
+import { Fire02Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 
 type IconType = React.ComponentProps<typeof HugeiconsIcon>["icon"];
@@ -13,6 +13,7 @@ export interface TimelineHabit {
   icon: IconType;
   hora: string; // 'HH:MM' — definida no Add; aqui só mostrada
   done: boolean;
+  streak: number; // dias seguidos deste hábito (🔥 quando ≥2)
 }
 
 // Lista de hábitos de hoje em timeline: nó (que também marca como feito) +
@@ -73,23 +74,43 @@ export function HabitTimeline({
             </motion.button>
 
             <div className="flex flex-1 items-center justify-between gap-3">
-              <p
-                className={cn(
-                  "min-w-0 truncate text-[0.95rem] font-medium",
-                  item.done && "text-muted-foreground line-through",
+              <div className="flex min-w-0 items-center gap-2">
+                <p
+                  className={cn(
+                    "min-w-0 truncate text-[0.95rem] font-medium",
+                    item.done && "text-muted-foreground line-through",
+                  )}
+                >
+                  {item.nome}
+                </p>
+                {item.streak >= 2 && (
+                  <span className="flex shrink-0 items-center gap-0.5 text-primary">
+                    <HugeiconsIcon icon={Fire02Icon} size={13} strokeWidth={2} />
+                    <span className="text-xs font-semibold tabular-nums">
+                      {item.streak}
+                    </span>
+                  </span>
                 )}
-              >
-                {item.nome}
-              </p>
-              {isCurrent ? (
-                <span className="shrink-0 rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground">
-                  Agora
-                </span>
-              ) : (
-                <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
-                  {item.hora}
-                </span>
-              )}
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                {isCurrent && (
+                  <span className="rounded-full bg-primary px-2.5 py-0.5 text-[0.65rem] font-semibold tracking-wide text-primary-foreground uppercase">
+                    Agora
+                  </span>
+                )}
+                {item.hora && (
+                  <span
+                    className={cn(
+                      "text-xs tabular-nums",
+                      isCurrent
+                        ? "font-semibold text-primary"
+                        : "text-muted-foreground",
+                    )}
+                  >
+                    {item.hora}
+                  </span>
+                )}
+              </div>
             </div>
           </li>
         );
