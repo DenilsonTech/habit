@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getStoredDeviceId } from "@/lib/device";
+import { aplicaNoDia } from "@/lib/dias";
 import { habitIcon } from "@/lib/habit-icons";
 import { useAppState, useLogHabit } from "@/lib/queries";
 import { HomeHeader } from "@/components/home/home-header";
@@ -59,8 +60,9 @@ export default function HomePage() {
   const initialized = useRef(false);
   useEffect(() => {
     if (!state?.onboarded) return;
-    const total = state.habits.length;
-    const done = state.habits.filter((h) => state.logs[h.id]?.concluido).length;
+    const doHoje = state.habits.filter((h) => aplicaNoDia(h.dias, state.today));
+    const total = doHoje.length;
+    const done = doHoje.filter((h) => state.logs[h.id]?.concluido).length;
     const allDone = total > 0 && done === total;
     if (!initialized.current) {
       initialized.current = true;
@@ -86,18 +88,21 @@ export default function HomePage() {
     return <HomeSkeleton />;
   }
 
-  const agua = state.habits.find((h) => h.slug === "agua");
-  const timeline = state.habits.filter((h) => h.slug !== "agua");
+  // Só os hábitos que se aplicam a hoje (dias da semana). A água (dias=[]) é
+  // sempre incluída.
+  const hoje = state.habits.filter((h) => aplicaNoDia(h.dias, state.today));
+  const agua = hoje.find((h) => h.slug === "agua");
+  const timeline = hoje.filter((h) => h.slug !== "agua");
   const cupMl = state.water?.cupMl ?? 250;
   const goalMl = state.water?.goalMl ?? 2000;
   const cupsGoal = Math.round(goalMl / cupMl);
   const cups = Math.round((state.water?.currentMl ?? 0) / cupMl);
 
-  const total = state.habits.length;
-  const doneCount = state.habits.filter((h) => state.logs[h.id]?.concluido).length;
+  const total = hoje.length;
+  const doneCount = hoje.filter((h) => state.logs[h.id]?.concluido).length;
   // Progresso do dia = média das frações de conclusão. Contadores (água) contam
   // proporção valor/meta, por isso cada copo já empurra a % (não salta só no fim).
-  const progressSum = state.habits.reduce((sum, h) => {
+  const progressSum = hoje.reduce((sum, h) => {
     const log = state.logs[h.id];
     if (h.isCounter && h.metaValor) {
       return sum + Math.min((log?.valor ?? 0) / h.metaValor, 1);

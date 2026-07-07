@@ -20,7 +20,7 @@ export async function computeBadgeStats(deviceId: string): Promise<BadgeStats> {
   const diasAtivos = new Set(
     diasConcluidos.map((l) => l.logDate.toISOString().slice(0, 10)),
   );
-  const diaStreak = computeStreak("daily", diasAtivos, maputoDateString());
+  const diaStreak = computeStreak([], diasAtivos, maputoDateString());
 
   const aguaDias = agua
     ? await prisma.dailyLog.count({

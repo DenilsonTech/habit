@@ -83,7 +83,7 @@ export async function POST(request: Request) {
           deviceId,
           slug: h.slug,
           nome: h.nome,
-          schedule: h.schedule,
+          dias: h.dias,
           isCounter: h.isCounter,
           unidade: h.unidade,
           metaValor: h.isCounter ? goalMl : null,

@@ -32,7 +32,7 @@ export async function getAppState(deviceId: string) {
   const diasAtivos = new Set(
     diasConcluidos.map((l) => l.logDate.toISOString().slice(0, 10)),
   );
-  const diaStreak = computeStreak("daily", diasAtivos, today);
+  const diaStreak = computeStreak([], diasAtivos, today);
 
   const aguaHabit = habits.find((h) => h.slug === "agua");
   const aguaLog = aguaHabit
@@ -62,7 +62,7 @@ export async function getAppState(deviceId: string) {
       id: h.id,
       slug: h.slug,
       nome: h.nome,
-      schedule: h.schedule,
+      dias: h.dias,
       isCounter: h.isCounter,
       metaValor: h.metaValor,
       unidade: h.unidade,

@@ -12,11 +12,6 @@ datasource db {
 }
 
 // Periodicidade de um hábito: todos os dias vs apenas dias úteis (2ª–6ª).
-enum Schedule {
-  daily
-  weekdays
-}
-
 // Identidade anónima do dispositivo (UUID gerado no cliente, guardado em localStorage).
 model Device {
   id        String   @id @db.Uuid
@@ -57,7 +52,7 @@ model Habit {
   slug               String
   nome               String
   descricao          String?
-  schedule           Schedule
+  dias               String[] @default([]) // dias da semana aplicáveis (vazio = todos)
   isCounter          Boolean  @default(false) @map("is_counter")
   metaValor          Int?     @map("meta_valor")
   unidade            String? // ex: 'ml', 'páginas', 'minutos' (para hábitos-contador)

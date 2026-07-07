@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { dateOnly } from "@/lib/db-time";
 import { maputoDateString } from "@/lib/time";
+import { aplicaNoDia } from "@/lib/dias";
 
 // Rótulos por dia da semana (0 = Domingo, getUTCDay).
 const DOW = ["Do", "Se", "Te", "Qa", "Qi", "Sx", "Sá"];
@@ -55,15 +56,14 @@ export async function GET(request: Request) {
 
   const total = habits.length;
 
-  // Slots aplicáveis (para pontuação e desempenho): daily = todos os dias;
-  // weekdays = só 2ª–6ª.
+  // Slots aplicáveis (para pontuação e desempenho): dias aplicáveis do hábito
+  // (vazio = todos os dias).
   const applicableByHabit = new Map<string, number>();
   let totalSlots = 0;
   for (const h of habits) {
     let ap = 0;
     for (const ds of dates) {
-      const wd = weekdayIndex(ds);
-      if (h.schedule === "daily" || (wd >= 1 && wd <= 5)) ap++;
+      if (aplicaNoDia(h.dias, ds)) ap++;
     }
     applicableByHabit.set(h.id, ap);
     totalSlots += ap;

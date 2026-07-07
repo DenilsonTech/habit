@@ -2,11 +2,11 @@ import { prisma } from "@/lib/prisma";
 import { isPushConfigured, webpush } from "@/lib/webpush";
 import {
   hhmmToMinutes,
-  isWeekdayInMaputo,
   maputoDateString,
   maputoMinutesOfDay,
 } from "@/lib/time";
 import { dateOnly, dateToTime } from "@/lib/db-time";
+import { aplicaNoDia } from "@/lib/dias";
 
 // Catch-up: envia lembretes cuja hora já passou há no máximo este tempo. Torna
 // o dispatch robusto ao jitter/atrasos/saltos do cron (um run em falha é
@@ -22,7 +22,6 @@ export async function dispatchDueReminders(): Promise<{ sent: number }> {
   const nowMin = maputoMinutesOfDay();
   const today = maputoDateString();
   const todayDate = dateOnly(today);
-  const isWeekday = isWeekdayInMaputo();
 
   // Só interessam devices com pelo menos uma subscrição de push.
   const subbed = new Set(
@@ -122,7 +121,7 @@ export async function dispatchDueReminders(): Promise<{ sent: number }> {
   for (const h of habits) {
     if (!subbed.has(h.deviceId)) continue;
     if (h.reminderTimes.length === 0) continue;
-    if (h.schedule === "weekdays" && !isWeekday) continue;
+    if (!aplicaNoDia(h.dias, today)) continue;
 
     const due = h.reminderTimes.filter(isDue);
     if (due.length === 0) continue;

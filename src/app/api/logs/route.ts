@@ -51,7 +51,7 @@ export async function POST(request: Request) {
   const dates = new Set(
     concluidoLogs.map((l) => l.logDate.toISOString().slice(0, 10)),
   );
-  const atual = computeStreak(habit.schedule, dates, maputoDateString());
+  const atual = computeStreak(habit.dias, dates, maputoDateString());
   const prev = await prisma.streak.findUnique({
     where: { deviceId_habitId: { deviceId, habitId } },
   });
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
   const diasAtivos = new Set(
     diasConcluidos.map((l) => l.logDate.toISOString().slice(0, 10)),
   );
-  const diaStreak = computeStreak("daily", diasAtivos, maputoDateString());
+  const diaStreak = computeStreak([], diasAtivos, maputoDateString());
 
   // Conquistas desbloqueadas por esta ação (para celebração no cliente).
   const novasConquistas = await evaluateBadges(deviceId);

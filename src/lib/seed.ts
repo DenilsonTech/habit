@@ -1,4 +1,3 @@
-import type { HabitSchedule } from "@/lib/types";
 import { hhmmToMinutes, minutesToHhmm } from "@/lib/time";
 
 // Hábitos pré-definidos semeados no onboarding (PRD 6.1) + defaults de perfil/água.
@@ -6,7 +5,7 @@ import { hhmmToMinutes, minutesToHhmm } from "@/lib/time";
 export interface SeedHabit {
   slug: string;
   nome: string;
-  schedule: HabitSchedule;
+  dias: string[]; // dias aplicáveis (vazio = todos os dias)
   isCounter: boolean;
   unidade: string | null;
   pontosPorConclusao: number;
@@ -14,10 +13,10 @@ export interface SeedHabit {
   reminderTimes: string[];
 }
 
-// Único hábito default: água (usa os horários do water_config). Todos os
-// restantes são criados pelo utilizador — arranca com timeline vazia.
+// Único hábito default: água (usa os horários do water_config; todos os dias).
+// Todos os restantes são criados pelo utilizador — arranca com timeline vazia.
 export const PREDEFINED_HABITS: SeedHabit[] = [
-  { slug: "agua", nome: "Água", schedule: "daily", isCounter: true, unidade: "ml", pontosPorConclusao: 20, icon: "droplet", reminderTimes: [] },
+  { slug: "agua", nome: "Água", dias: [], isCounter: true, unidade: "ml", pontosPorConclusao: 20, icon: "droplet", reminderTimes: [] },
 ];
 
 // Rotina default (perfil do PRD) — editável no Perfil.

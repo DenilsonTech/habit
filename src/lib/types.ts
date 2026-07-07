@@ -1,8 +1,5 @@
 // Tipos partilhados da app. Ver PRD secções 5 e 6.
 
-/** Periodicidade de um hábito — espelha o enum `Schedule` da base de dados. */
-export type HabitSchedule = "daily" | "weekdays";
-
 /** Tipo de hábito na UI: feito/não feito vs contador acumulado. */
 export type HabitKind = "boolean" | "counter";
 

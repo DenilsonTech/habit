@@ -1,14 +1,8 @@
-import type { HabitSchedule } from "@/lib/types";
+import { aplicaNoDia } from "@/lib/dias";
 
-// Cálculo de streak (PRD 6.3). Dias aplicáveis dependem do schedule: um hábito
-// `weekdays` não quebra ao fim-de-semana (esses dias são ignorados). O dia de
-// hoje ainda por fazer não quebra a streak — só um dia passado em falta é que quebra.
-
-function isWeekdayStr(date: string): boolean {
-  const [y, m, d] = date.split("-").map(Number);
-  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
-  return dow >= 1 && dow <= 5;
-}
+// Cálculo de streak (PRD 6.3). Os dias aplicáveis dependem de `dias` do hábito
+// (vazio = todos os dias): um dia não aplicável é ignorado, não quebra. O dia de
+// hoje ainda por fazer também não quebra — só um dia passado aplicável em falta.
 
 function prevDay(date: string): string {
   const [y, m, d] = date.split("-").map(Number);
@@ -16,15 +10,14 @@ function prevDay(date: string): string {
 }
 
 export function computeStreak(
-  schedule: HabitSchedule,
+  dias: string[],
   concluido: Set<string>,
   today: string,
 ): number {
   let atual = 0;
   let cursor = today;
   for (let i = 0; i < 400; i++) {
-    const applicable = schedule === "daily" || isWeekdayStr(cursor);
-    if (applicable) {
+    if (aplicaNoDia(dias, cursor)) {
       if (concluido.has(cursor)) {
         atual++;
       } else if (cursor !== today) {

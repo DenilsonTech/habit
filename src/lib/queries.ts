@@ -7,7 +7,7 @@ export interface StateHabit {
   id: string;
   slug: string;
   nome: string;
-  schedule: string;
+  dias: string[];
   isCounter: boolean;
   metaValor: number | null;
   unidade: string | null;
